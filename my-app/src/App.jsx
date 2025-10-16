@@ -1,133 +1,192 @@
-import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { OrbitControls } from "@react-three/drei"
-import * as THREE from "three"
-import { useState } from "react"
+import CountryPanel from "./CountryPanel/CountryPanel";
+import { useState } from "react";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import StarField from "./Background/StarField";
+import {
+  reverseGeocode,
+  getCountryFromRestCountries,
+  getWeather,
+  fetchCapitalImage,
+  fetchRegionsGeoNames,
+  fetchRegionsWikidata,
+  fetchCitiesGeoNames,
+  fetchPlacesGeoapify,
+} from "./Hooks/Hooks";
+import Earth from "./Earth/Earth";
 
-function CountryPanel({ data }) {
-  if (!data) return null;
-
-  const { geoData, countryData, weatherData } = data;
-  const country = countryData[0]; // restcountries returns array
-
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top: 20,
-        right: 20,
-        width: "300px",
-        background: "rgba(20,20,20,0.9)",
-        color: "white",
-        borderRadius: "12px",
-        padding: "16px",
-        fontFamily: "Arial, sans-serif",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", marginBottom: "12px" }}>
-        <img
-          src={country.flags.svg}
-          alt="flag"
-          style={{ width: "50px", marginRight: "12px", borderRadius: "4px" }}
-        />
-        <h2 style={{ margin: 0, fontSize: "1.2rem" }}>{country.name.common}</h2>
-      </div>
-
-      <p><b>Capital:</b> {country.capital?.[0]}</p>
-      <p><b>Region:</b> {country.region}</p>
-      <p><b>Population:</b> {country.population.toLocaleString()}</p>
-      <p><b>Coordinates:</b> {geoData.lat}, {geoData.lon}</p>
-      <p>
-        <b>Weather:</b> {weatherData.weather?.[0]?.description} —{" "}
-        {(weatherData.main.temp - 273.15).toFixed(1)}°C
-      </p>
-    </div>
-  );
-}
-function Earth() {
-  const [coords, setCoords] = useState(null)
+export default function App() {
   const [data, setData] = useState(null);
-  const { camera, gl } = useThree()
-  const raycaster = new THREE.Raycaster()
-  const pointer = new THREE.Vector2()
+  const [loading, setLoading] = useState({
+    country: false,
+    regions: false,
+    cities: false,
+    places: false,
+  });
+  const [error, setError] = useState(null);
 
-  async function handleClick(event) {
-    // Convert mouse to NDC
-    pointer.x = (event.clientX / window.innerWidth) * 2 - 1
-    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1
+  // Separate tracking states
+  const [selectedCountryName, setSelectedCountryName] = useState(null);
+  const [selectedRegionName, setSelectedRegionName] = useState(null);
+  const [selectedCityName, setSelectedCityName] = useState(null);
 
-    raycaster.setFromCamera(pointer, camera)
+  console.log(loading)
 
-    // Raycast to a perfect sphere (radius = 1)
-    const sphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 1)
-    const intersection = raycaster.ray.intersectSphere(sphere, new THREE.Vector3())
+  // click country on globe
+  async function onCountryClick({ lat, lon }) {
+    setError(null);
+    setLoading((s) => ({ ...s, country: true, regions: true }));
+    setSelectedCityName(null);
+    setSelectedRegionName(null);
+    try {
+      const rev = await reverseGeocode(lat, lon);
+      const countryCode = rev.address?.country_code?.toUpperCase();
+      console.log("Reverse geocode country code:", countryCode, rev);
+      if (!countryCode) throw new Error("No country at that location");
 
-    if (intersection) {
-      const p = intersection.clone().normalize()
-      const lat = Math.asin(p.y) * (180 / Math.PI)
-      const lon = Math.atan2(p.x, p.z) * (180 / Math.PI)
-      setCoords({ lat, lon })
-      const info = await getCountryInfo(lat, lon);
-      console.log(info);
-      setData(info);
-      if(info){
-        console.log(info);
+      const countryData = await getCountryFromRestCountries(countryCode);
+      const weatherData = await getWeather(lat, lon);
+
+      // set selected country name
+      const countryName = countryData?.[0]?.name?.common || null;
+      setSelectedCountryName(countryName);
+
+      // fetch capital image (Unsplash)
+      const capitalName = countryData?.[0]?.capital?.[0] || null;
+      let capitalImage = null;
+      try {
+        capitalImage = await fetchCapitalImage(capitalName, countryName);
+      } catch (err) {
+        console.warn("Capital image failed", err);
+        capitalImage = null;
       }
-      console.log(`Latitude: ${lat.toFixed(2)}°`)
-      console.log(`Longitude: ${lon.toFixed(2)}°`)
+
+      // fetch regions (GeoNames) + fallback Wikidata
+      let regions = [];
+      try {
+        regions = await fetchRegionsGeoNames(countryCode, countryName);
+        console.log("Country Code: ", countryCode, "Country Name: ", countryName, "Regions:", regions);
+      } catch (err) {
+        console.warn("GeoNames regions failed, trying Wikidata", err);
+        try {
+          regions = await fetchRegionsWikidata(countryCode);
+        } catch (err2) {
+          console.warn("Wikidata regions failed", err2);
+          regions = [];
+        }
+      }
+
+      setData({
+        geoData: { ...rev, lat, lon },
+        countryData,
+        weatherData,
+        capitalImage,
+        regions,
+        cities: [],
+        places: [],
+      });
+
+      // reset previous selections
+      setSelectedRegionName(null);
+      setSelectedCityName(null);
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to load country");
+    } finally {
+      setLoading((s) => ({ ...s, country: false, regions: false }));
+    }
+  }
+
+  // region selected -> load cities
+  async function onRegionSelect(region) {
+    setError(null);
+    setLoading((s) => ({ ...s, cities: true }));
+    setData((d) => ({ ...d, cities: [], places: [] }));
+    setSelectedRegionName(region?.name || null);
+    setSelectedCityName(null); // reset city when region changes
+
+    try {
+      const countryCode = data?.countryData?.[0]?.cca2;
+      const cities = await fetchCitiesGeoNames(region, countryCode);
+
+      // sort by name and dedupe
+      const seen = new Set();
+      const dedup = [];
+      for (const c of cities || []) {
+        const key = `${c.name}-${c.id}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          dedup.push(c);
+        }
+      }
+      dedup.sort((a, b) => a.name.localeCompare(b.name));
+      setData((d) => ({ ...d, cities: dedup }));
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load cities");
+    } finally {
+      setLoading((s) => ({ ...s, cities: false }));
+    }
+  }
+
+  // city selected -> load places
+  async function onCitySelect(city) {
+    setError(null);
+    setLoading((s) => ({ ...s, places: true }));
+    setData((d) => ({ ...d, places: [] }));
+    setSelectedCityName(city?.name || null);
+
+    try {
+      let lat = city.latitude;
+      let lon = city.longitude;
+
+      if (!lat || !lon) {
+        const q = encodeURIComponent(`${city.name}, ${selectedCountryName}`);
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`
+        );
+        const j = await res.json();
+        if (j && j[0]) {
+          lat = parseFloat(j[0].lat);
+          lon = parseFloat(j[0].lon);
+        }
+      }
+
+      if (!lat || !lon) throw new Error("City coordinates not found");
+
+      const places = await fetchPlacesGeoapify(lat, lon);
+      setData((d) => ({ ...d, places }));
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load places");
+    } finally {
+      setLoading((s) => ({ ...s, places: false }));
     }
   }
 
   return (
     <>
-      {/* Earth visual (globe texture or GLTF) */}
-      <mesh onClick={handleClick} rotation={[0, -Math.PI / 2, 0]}>
-        <sphereGeometry args={[1, 64, 64]} />
-        <meshStandardMaterial map={new THREE.TextureLoader().load("earth.jpg")} />
-      </mesh>
-      <CountryPanel data={data} />
+      <Canvas
+        camera={{ position: [0, 0, 3] }}
+        style={{ width: "100vw", height: "100vh", background: "black" }}
+        >
+        <StarField/>
+        <ambientLight intensity={3} />
+        <directionalLight position={[5, 5, 5]} />
+        <Earth onClickLatLon={onCountryClick} capitalCity={null}/>
+        <OrbitControls enablePan={false} minDistance={1.5} maxDistance={8}/>
+      </Canvas>
 
-      {/* Optional overlay */}
+      <CountryPanel
+        data={data}
+        loading={loading}
+        error={error}
+        onRegionSelect={onRegionSelect}
+        onCitySelect={onCitySelect}
+        countryName={selectedCountryName}
+        cityName={selectedCityName}
+        regionName={selectedRegionName}
+      />
     </>
-  )
+  );
 }
-
-export default function App() {
-  return (
-    <Canvas camera={{ position: [0, 0, 3] }} style={{backgroundColor: 'black', width: '100vw', height: '100vh'}}>
-      <ambientLight intensity={5} />
-      <directionalLight position={[5, 5, 5]} />
-      <Earth />
-      <OrbitControls />
-    </Canvas>
-  )
-}
-async function getCountryInfo(lat, lon) {
-  try {
-    // Reverse geocode
-    const geoRes = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
-    );
-    const geoData = await geoRes.json();
-    const countryCode = geoData.address?.country_code?.toUpperCase();
-    if (!countryCode) return null;
-
-    // Country details
-    const countryRes = await fetch(
-      `https://restcountries.com/v3.1/alpha/${countryCode}`
-    );
-    const countryData = await countryRes.json();
-
-    // Weather
-    const weatherRes = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=66f213737d90379c9824318bd51c5aae`
-    );
-    const weatherData = await weatherRes.json();
-
-    return { geoData: { ...geoData, lat, lon }, countryData, weatherData };
-  } catch (err) {
-    console.error("Error fetching country info:", err);
-    return null;
-  }
-}
-
