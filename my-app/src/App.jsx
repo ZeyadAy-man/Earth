@@ -25,14 +25,10 @@ export default function App() {
   });
   const [error, setError] = useState(null);
 
-  // Separate tracking states
   const [selectedCountryName, setSelectedCountryName] = useState(null);
   const [selectedRegionName, setSelectedRegionName] = useState(null);
   const [selectedCityName, setSelectedCityName] = useState(null);
 
-  console.log(loading)
-
-  // click country on globe
   async function onCountryClick({ lat, lon }) {
     setError(null);
     setLoading((s) => ({ ...s, country: true, regions: true }));
@@ -47,11 +43,9 @@ export default function App() {
       const countryData = await getCountryFromRestCountries(countryCode);
       const weatherData = await getWeather(lat, lon);
 
-      // set selected country name
       const countryName = countryData?.[0]?.name?.common || null;
       setSelectedCountryName(countryName);
 
-      // fetch capital image (Unsplash)
       const capitalName = countryData?.[0]?.capital?.[0] || null;
       let capitalImage = null;
       try {
@@ -61,11 +55,17 @@ export default function App() {
         capitalImage = null;
       }
 
-      // fetch regions (GeoNames) + fallback Wikidata
       let regions = [];
       try {
         regions = await fetchRegionsGeoNames(countryCode, countryName);
-        console.log("Country Code: ", countryCode, "Country Name: ", countryName, "Regions:", regions);
+        console.log(
+          "Country Code: ",
+          countryCode,
+          "Country Name: ",
+          countryName,
+          "Regions:",
+          regions
+        );
       } catch (err) {
         console.warn("GeoNames regions failed, trying Wikidata", err);
         try {
@@ -166,17 +166,7 @@ export default function App() {
 
   return (
     <>
-      <Canvas
-        camera={{ position: [0, 0, 3] }}
-        style={{ width: "100vw", height: "100vh", background: "black" }}
-        >
-        <StarField/>
-        <ambientLight intensity={3} />
-        <directionalLight position={[5, 5, 5]} />
-        <Earth onClickLatLon={onCountryClick} capitalCity={null}/>
-        <OrbitControls enablePan={false} minDistance={1.5} maxDistance={8}/>
-      </Canvas>
-
+      <CanvasScene onCountryClick={onCountryClick} />
       <CountryPanel
         data={data}
         loading={loading}
@@ -188,5 +178,19 @@ export default function App() {
         regionName={selectedRegionName}
       />
     </>
+  );
+}
+function CanvasScene({onCountryClick}) {
+  return (
+    <Canvas
+      camera={{ position: [0, 0, 3] }}
+      style={{ width: "100vw", height: "100vh", background: "black" }}
+    >
+      <StarField />
+      <ambientLight intensity={3} />
+      <directionalLight position={[5, 5, 5]} />
+      <Earth onClickLatLon={onCountryClick} capitalCity={null} />
+      <OrbitControls enablePan={false} minDistance={1.5} maxDistance={8} />
+    </Canvas>
   );
 }

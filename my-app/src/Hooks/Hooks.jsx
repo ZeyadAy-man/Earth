@@ -263,3 +263,28 @@ export async function fetchAttractionImage(attractionName, regionName, countryNa
     return null;
   }
 }
+
+export async function fetchHotelImage(hotelName, cityName, countryName, setHotelImage, setHotelLoading) {
+  
+    if (!hotelName) return setHotelImage(null);
+    setHotelLoading(true);
+    const query = `${hotelName} hotel in ${cityName || ""}, ${
+      countryName || ""
+    }`.trim();
+    try {
+      const res = await fetch(
+        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(
+          query
+        )}&per_page=1&orientation=landscape`,
+        { headers: { Authorization: `Client-ID ${UNSPLASH_KEY}` } }
+      );
+      const json = await res.json();
+      const img = json.results?.[0]?.urls?.regular || null;
+      setHotelImage(img);
+    } catch (err) {
+      console.error("Failed to fetch hotel image", err);
+      setHotelImage(null);
+    } finally {
+      setHotelLoading(false);
+    }
+  }

@@ -1,4 +1,4 @@
-import { fetchAttractionImage } from "../Hooks/Hooks";
+import { fetchAttractionImage } from "../../Hooks/Hooks";
 
 export default async function HandleSelectAttraction(
   attraction,
