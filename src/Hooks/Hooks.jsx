@@ -91,6 +91,9 @@ export async function fetchRegionsGeoNames(countryCode, countryName) {
   if(countryId == 1814991 && countryCode === "US" && countryName === "United States") {
     countryId = 6252001;
   }
+  if(countryId == 294640 &&countryCode === "IL"){
+    countryId = 6254930;
+  }
   
   if (!countryId) return [];
 
