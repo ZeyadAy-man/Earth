@@ -1,0 +1,45 @@
+export const styles = {
+  panel: {
+    position: "absolute",
+    top: 20,
+    left: 20,
+    zIndex: 100,
+    background: "rgba(10, 15, 25, 0.75)", // semi-transparent dark
+    border: "1px solid rgba(0,255,255,0.2)", // cyan border glow
+    borderRadius: 16,
+    backdropFilter: "blur(14px) saturate(180%)",
+    boxShadow:
+      "0 0 25px rgba(0,255,255,0.08), inset 0 0 8px rgba(255,255,255,0.03)",
+    padding: 16,
+    color: "#e5faff",
+    fontFamily: "Inter, 'Segoe UI', sans-serif",
+    fontSize: 14,
+    maxWidth: 360,
+    width: "calc(100% - 40px)",
+    maxHeight: "85vh",
+    overflowY: "auto",
+    transition: "0.3s ease all",
+  },
+  select: {
+    width: "100%",
+    padding: "7px 10px",
+    borderRadius: 10,
+    border: "1px solid rgba(0,255,255,0.3)",
+    background: "rgba(255,255,255,0)",
+    color: "#e5faff",
+    fontSize: 13,
+    outline: "none",
+    cursor: "pointer",
+    transition: "all 0.25s ease",
+    backgroundColor: "black",
+  },
+  label: {
+    display: "block",
+    fontWeight: 700,
+    fontSize: 13,
+    color: "#00ffff",
+    marginBottom: 6,
+    marginTop: 10,
+    textShadow: "0 0 6px rgba(0,255,255,0.3)",
+  },
+};
