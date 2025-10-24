@@ -1,0 +1,147 @@
+.root {
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 18px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  font-size: 1.1rem;
+  color: #fff;
+  font-weight: 600;
+}
+
+.headerEmoji {
+  margin-right: 8px;
+  font-size: 1.3rem;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.dropdownWrap {
+  width: 100%;
+}
+
+.dropdown {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  font-size: 0.95rem;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.dropdown:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.imageWrap {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  text-align: center;
+  padding: 10px;
+  min-height: 160px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.regionImage {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.loadingText,
+.imageEmpty,
+.noData {
+  color: #ccc;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.skeletonWrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.skelLine,
+.skelLineShort,
+.skelImage {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08) 25%,
+    rgba(255, 255, 255, 0.18) 37%,
+    rgba(255, 255, 255, 0.08) 63%
+  );
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 6px;
+}
+
+.skelLine {
+  width: 80%;
+  height: 14px;
+}
+
+.skelLineShort {
+  width: 60%;
+  height: 14px;
+}
+
+.skelImage {
+  width: 100%;
+  height: 120px;
+  border-radius: 10px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
