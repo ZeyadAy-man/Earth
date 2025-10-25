@@ -114,6 +114,34 @@ export async function fetchRegionsGeoNames(countryCode, countryName) {
   return regions;
 }
 
+export async function fetchRegionsWikidata(countryCode) {
+  const query = `
+SELECT DISTINCT ?label WHERE {
+  ?country wdt:P297 "${countryCode}".
+  ?region wdt:P17 ?country.
+  VALUES ?inst { wd:Q10864048 wd:Q23259 wd:Q43189 wd:Q310686 wd:Q258831 }
+  ?region wdt:P31 ?inst.
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+}
+LIMIT 500`;
+  const url = `https://query.wikidata.org/sparql?format=json&query=${encodeURIComponent(
+    query
+  )}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Wikidata SPARQL failed");
+  const json = await res.json();
+  const bindings = json.results?.bindings || [];
+  const seen = new Set();
+  return bindings
+    .map((b) => b.label.value)
+    .filter((n) => {
+      if (seen.has(n)) return false;
+      seen.add(n);
+      return true;
+    })
+    .map((name) => ({ name, geonameId: null }));
+}
+
 export async function fetchCitiesGeoNames(region, countryCode) {
   if (!GEO_NAMES_USERNAME) throw new Error("Missing GeoNames username");
   let cities = [];
@@ -189,34 +217,6 @@ export async function fetchPlacesGeoapify(lat, lon) {
   return json.features || [];
 }
 
-export async function fetchRegionsWikidata(countryCode) {
-  const query = `
-SELECT DISTINCT ?label WHERE {
-  ?country wdt:P297 "${countryCode}".
-  ?region wdt:P17 ?country.
-  VALUES ?inst { wd:Q10864048 wd:Q23259 wd:Q43189 wd:Q310686 wd:Q258831 }
-  ?region wdt:P31 ?inst.
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-}
-LIMIT 500`;
-  const url = `https://query.wikidata.org/sparql?format=json&query=${encodeURIComponent(
-    query
-  )}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Wikidata SPARQL failed");
-  const json = await res.json();
-  const bindings = json.results?.bindings || [];
-  const seen = new Set();
-  return bindings
-    .map((b) => b.label.value)
-    .filter((n) => {
-      if (seen.has(n)) return false;
-      seen.add(n);
-      return true;
-    })
-    .map((name) => ({ name, geonameId: null }));
-}
-
 export async function fetchAttractionImage(attractionName, regionName, countryName, signal) {
   try {
     const query = `${attractionName}${regionName ? ", " + regionName : ""}${
@@ -290,4 +290,124 @@ export async function fetchHotelImage(hotelName, cityName, countryName, setHotel
     } finally {
       setHotelLoading(false);
     }
+}
+
+const WIKIDATA_SPARQL = "https://query.wikidata.org/sparql";
+
+export async function fetchGeoNamesGet(geonameId) {
+  if (!GEO_NAMES_USERNAME) throw new Error("Missing GeoNames username");
+  const url = `https://secure.geonames.org/getJSON?geonameId=${geonameId}&username=${GEO_NAMES_USERNAME}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("GeoNames getJSON failed");
+  return res.json();
+}
+
+/**
+ * Search GeoNames for airports within bbox
+ * bbox = [west, south, east, north]
+ */
+export async function searchAirportsInBbox(bbox, maxRows = 10) {
+  if (!GEO_NAMES_USERNAME) throw new Error("Missing GeoNames username");
+  if (!bbox || bbox.length !== 4) return [];
+  const [west, south, east, north] = bbox;
+  const q = new URLSearchParams({
+    username: GEO_NAMES_USERNAME,
+    featureCode: "AIRP",
+    north: String(north),
+    south: String(south),
+    east: String(east),
+    west: String(west),
+    maxRows: String(maxRows),
+    style: "SHORT",
+  });
+  const url = `https://secure.geonames.org/searchJSON?${q.toString()}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("GeoNames airport search failed");
+  const json = await res.json();
+  return json.geonames || [];
+}
+
+/**
+ * Fetch area, industries, climate from Wikidata by GeoNames ID
+ */
+export async function fetchWikidataByGeonameId(geonameId) {
+  if (!geonameId) return null;
+
+  const query = `
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+SELECT ?area ?industryLabel ?climateLabel WHERE {
+  ?region wdt:P1566 "${geonameId}".
+  OPTIONAL { ?region wdt:P2046 ?area. }
+  OPTIONAL { ?region wdt:P452 ?industry.
+             SERVICE wikibase:label { bd:serviceParam wikibase:language "en". ?industry rdfs:label ?industryLabel. } }
+  OPTIONAL { ?region wdt:P2564 ?climate.
+             SERVICE wikibase:label { bd:serviceParam wikibase:language "en". ?climateLabel. } }
+}
+LIMIT 50
+`;
+  const url = `${WIKIDATA_SPARQL}?format=json&query=${encodeURIComponent(query)}`;
+  const res = await fetch(url, {
+    headers: {
+      "Accept": "application/sparql-results+json",
+      "User-Agent": "YourApp/1.0 (youremail@example.com)"
+    }
+  });
+  if (!res.ok) {
+    console.warn("Wikidata SPARQL failed", res.status);
+    return null;
   }
+  const json = await res.json();
+  const rows = json.results?.bindings || [];
+  const result = { area_km2: null, main_economic_activities: [], climate: null };
+
+  for (const r of rows) {
+    if (r.area && r.area.value) result.area_km2 = Number(r.area.value);
+    if (r.industryLabel && r.industryLabel.value) result.main_economic_activities.push(r.industryLabel.value);
+    if (r.climateLabel && r.climateLabel.value) result.climate = r.climateLabel.value;
+  }
+
+  return result;
+}
+
+/**
+ * Enrich a region object with population, area, industries, airports, climate
+ */
+export async function enrichRegion(region) {
+  const { geonameId } = region;
+  const out = { ...region, population: null, area_km2: null, main_economic_activities: [], climate: null, airports: [] };
+
+  try {
+    // 1) Population from GeoNames
+    const gn = await fetchGeoNamesGet(geonameId);
+    if (gn && gn.population) out.population = Number(gn.population);
+
+    // 2) Wikidata enrichment
+    const wd = await fetchWikidataByGeonameId(geonameId); // دالة جديدة SPARQL
+    if (wd) {
+      if (wd.area_km2) out.area_km2 = wd.area_km2;
+      if (wd.main_economic_activities?.length) out.main_economic_activities = wd.main_economic_activities;
+      if (wd.climate) out.climate = wd.climate;
+      if (wd.airports?.length) out.airports = wd.airports;
+    }
+
+    return out;
+  } catch (err) {
+    console.error("enrichRegion error", err);
+    return out;
+  }
+}
+
+/**
+ * Batch enrich multiple regions
+ */
+export async function enrichRegionsBatch(regions, batchSize = 6, delayMs = 200) {
+  const results = [];
+  for (let i = 0; i < regions.length; i += batchSize) {
+    const batch = regions.slice(i, i + batchSize);
+    const enriched = await Promise.all(batch.map(r => enrichRegion(r)));
+    results.push(...enriched);
+    await new Promise(res => setTimeout(res, delayMs)); // rate limit friendly
+  }
+  return results;
+}

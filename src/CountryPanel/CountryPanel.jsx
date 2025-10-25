@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import InitializerStates from "../InitializerStates/InitializerStates";
 import IdleGUI from "./GUI/IdleGUI";
 import HotelFilters from "./Filters/HotelFilters";
@@ -39,9 +39,20 @@ export default function CountryPanel({
     setSelectedRegionName,
   } = InitializerStates();
 
+  useEffect(() => {
+    if(!data){
+      setRegionImage(null)
+      setHotelImage(null)
+      setAttractionImage(null)
+    }
+  }, [data])
+
   const attractionFetchControllerRef = useRef(null);
 
-  if (!data) return <IdleGUI error={error} styles={styles} />;
+  if (!data) {
+    // setRegionImage(null)
+    return <IdleGUI error={error} styles={styles} />;
+  }
 
   const {
     geoData,
@@ -108,7 +119,7 @@ export default function CountryPanel({
           hotelLoading={hotelLoading}
           setHotelLoading={setHotelLoading}
         />
-        
+
         <AttractionDetails
           attractions={attractions}
           regionName={regionName}

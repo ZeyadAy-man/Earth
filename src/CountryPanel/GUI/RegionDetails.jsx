@@ -32,6 +32,10 @@ export default function RegionDetails({
     });
   };
 
+  if(!country){
+    setRegionImage(null);
+  }
+
   return (
     <motion.div
       className={styles.root}

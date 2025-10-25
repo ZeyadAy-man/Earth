@@ -1,7 +1,19 @@
+import { useState } from "react";
 import { fetchHotelImage } from "../../Hooks/Hooks";
 import { styles } from "../Styles";
 
-export default function HotelDetails({ hotels, cityName, countryName, hotelImage, setHotelImage, hotelLoading, setHotelLoading }) {
+export default function HotelDetails({
+  hotels,
+  cityName,
+  countryName,
+  hotelImage,
+  setHotelImage,
+  hotelLoading,
+  setHotelLoading,
+}) {
+  const [selectedHotel, setSelectedHotel] = useState({});
+  console.log(hotels);
+
   return (
     <>
       <div style={{ fontSize: 13, opacity: 0.9 }}>Top hotels</div>
@@ -11,6 +23,7 @@ export default function HotelDetails({ hotels, cityName, countryName, hotelImage
           const id = e.target.value;
           const sel = hotels.find((h) => h.properties.place_id === id);
           if (sel) {
+            setSelectedHotel(sel);
             fetchHotelImage(
               sel.properties.name,
               cityName,
@@ -39,17 +52,20 @@ export default function HotelDetails({ hotels, cityName, countryName, hotelImage
       {hotelLoading ? (
         <div style={{ marginTop: 8, color: "#aaa" }}>Loading image...</div>
       ) : hotelImage ? (
-        <img
-          src={hotelImage}
-          alt="hotel"
-          style={{
-            width: "100%",
-            height: 180,
-            objectFit: "cover",
-            borderRadius: 8,
-            marginTop: 8,
-          }}
-        />
+        <>
+          <img
+            src={hotelImage}
+            alt="hotel"
+            style={{
+              width: "100%",
+              height: 180,
+              objectFit: "cover",
+              borderRadius: 8,
+              marginTop: 8,
+            }}
+          />
+          <a href={selectedHotel.properties.website} target="_blank">{selectedHotel.properties.website}</a>
+        </>
       ) : null}
     </>
   );

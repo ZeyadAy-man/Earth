@@ -27,6 +27,7 @@ export default function App() {
   const [selectedCityName, setSelectedCityName] = useState(null);
 
   async function onCountryClick({ lat, lon }) {
+    setData(null);
     setError(null);
     setLoading((s) => ({ ...s, country: true, regions: true }));
     setSelectedCityName(null);

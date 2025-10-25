@@ -145,3 +145,8 @@
     background-position: calc(200px + 100%) 0;
   }
 }
+.dropdown option {
+  background: #111;
+  color: #fff;
+}
+

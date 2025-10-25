@@ -4,8 +4,8 @@ export const styles = {
     top: 20,
     left: 20,
     zIndex: 100,
-    background: "rgba(10, 15, 25, 0.75)", // semi-transparent dark
-    border: "1px solid rgba(0,255,255,0.2)", // cyan border glow
+    background: "rgba(10, 15, 25, 0.75)",
+    border: "1px solid rgba(0,255,255,0.2)",
     borderRadius: 16,
     backdropFilter: "blur(14px) saturate(180%)",
     boxShadow:
@@ -14,7 +14,7 @@ export const styles = {
     color: "#e5faff",
     fontFamily: "Inter, 'Segoe UI', sans-serif",
     fontSize: 14,
-    maxWidth: 360,
+    maxWidth: 400,
     width: "calc(100% - 40px)",
     maxHeight: "85vh",
     overflowY: "auto",
