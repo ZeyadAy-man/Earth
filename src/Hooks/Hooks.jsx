@@ -76,7 +76,6 @@ export async function fetchCountryGeoNameId(countryCode, countryName) {
     : `country=${countryCode}`;
   const url = `https://secure.geonames.org/searchJSON?${q}&featureCode=PCLI&maxRows=10&username=${GEO_NAMES_USERNAME}`;
   const res = await fetch(url);
-  console.log("GeoNames country search res:", res);
   if (!res.ok) throw new Error("Geonames search failed");
   const json = await res.json();
   const first = (json.geonames || [])[0];
@@ -86,8 +85,6 @@ export async function fetchCountryGeoNameId(countryCode, countryName) {
 export async function fetchRegionsGeoNames(countryCode, countryName) {
   if (!GEO_NAMES_USERNAME) throw new Error("Missing GeoNames username");
   let countryId = await fetchCountryGeoNameId(countryCode, countryName);
-  console.log("Country GeoNameId:", countryCode, "Country Name:", countryName, "ID:", countryId);
-  
   if(countryId == 1814991 && countryCode === "US" && countryName === "United States") {
     countryId = 6252001;
   }
@@ -101,7 +98,6 @@ export async function fetchRegionsGeoNames(countryCode, countryName) {
   const res = await fetch(childrenUrl);
   if (!res.ok) throw new Error("Geonames children failed");
   const json = await res.json();
-  console.log("GeoNames regions fetched:", (json.geonames || []));
   const regions = (json.geonames || []).map((g) => ({
     name: g.name,
     geonameId: g.geonameId,
@@ -145,48 +141,7 @@ LIMIT 500`;
 export async function fetchCitiesGeoNames(region, countryCode) {
   if (!GEO_NAMES_USERNAME) throw new Error("Missing GeoNames username");
   let cities = [];
-  // console.log("Fetching cities for region:", region, "Country:", countryCode);
-  // Attempt 1 - search using adminCode1
-  if (region.adminCode1) {
-    const url = `https://secure.geonames.org/searchJSON?country=${countryCode}&adminCode1=${encodeURIComponent(
-      region.adminCode1
-    )}&featureClass=P&maxRows=500&username=${GEO_NAMES_USERNAME}`;
-    const res = await fetch(url);
-    const json = await res.json();
-    if (json.geonames?.length) {
-      cities = json.geonames.map((c) => ({
-        id: c.geonameId,
-        name: c.name,
-        latitude: parseFloat(c.lat),
-        longitude: parseFloat(c.lng),
-      }));
-      if (cities.length) return cities;
-    }
-  }
 
-  // Attempt 2 - children of region's geonameId
-  if (region.geonameId) {
-    const url = `https://secure.geonames.org/childrenJSON?geonameId=${region.geonameId}&username=${GEO_NAMES_USERNAME}`;
-    const res = await fetch(url);
-    const json = await res.json();
-    if (json.geonames?.length) {
-      cities = json.geonames
-        .filter(
-          (g) =>
-            (g.fcodeName || "").toLowerCase().includes("populated place") ||
-            g.population > 0
-        )
-        .map((c) => ({
-          id: c.geonameId,
-          name: c.name,
-          latitude: parseFloat(c.lat),
-          longitude: parseFloat(c.lng),
-        }));
-      if (cities.length) return cities;
-    }
-  }
-
-  // Attempt 3 - search by region name as fallback
   if (region.name) {
     const url = `https://secure.geonames.org/searchJSON?q=${encodeURIComponent(
       region.name
@@ -200,22 +155,32 @@ export async function fetchCitiesGeoNames(region, countryCode) {
       longitude: parseFloat(c.lng),
     }));
   }
-
   return cities;
 }
 
 export async function fetchPlacesGeoapify(lat, lon) {
   if (!GEOAPIFY_KEY) return [];
   const radius = 30000;
-  const categories = "accommodation.hotel,tourism";
+
+  const categories = [
+    "accommodation.hotel",
+    "accommodation.guest_house",
+    "tourism.attraction",
+    "entertainment.theme_park",
+    "entertainment.cinema",
+    "airport.military"
+  ].join(",");
+
   const url = `https://api.geoapify.com/v2/places?categories=${encodeURIComponent(
     categories
-  )}&filter=circle:${lon},${lat},${radius}&limit=40&apiKey=${GEOAPIFY_KEY}`;
+  )}&filter=circle:${lon},${lat},${radius}&limit=120&apiKey=${GEOAPIFY_KEY}`;
+
   const res = await fetch(url);
   if (!res.ok) throw new Error("Geoapify failed");
   const json = await res.json();
   return json.features || [];
 }
+
 
 export async function fetchAttractionImage(attractionName, regionName, countryName, signal) {
   try {
@@ -243,6 +208,7 @@ export async function fetchAttractionImage(attractionName, regionName, countryNa
     const data = await res.json();
 
     if (data.results && data.results.length > 0) {
+      console.log(data.results[0].urls.small || data.results[0].urls.regular || null)
       return data.results[0].urls.small || data.results[0].urls.regular || null;
     } else {
       // fallback: query by attraction name only
@@ -301,32 +267,6 @@ export async function fetchGeoNamesGet(geonameId) {
   if (!res.ok) throw new Error("GeoNames getJSON failed");
   return res.json();
 }
-
-/**
- * Search GeoNames for airports within bbox
- * bbox = [west, south, east, north]
- */
-export async function searchAirportsInBbox(bbox, maxRows = 10) {
-  if (!GEO_NAMES_USERNAME) throw new Error("Missing GeoNames username");
-  if (!bbox || bbox.length !== 4) return [];
-  const [west, south, east, north] = bbox;
-  const q = new URLSearchParams({
-    username: GEO_NAMES_USERNAME,
-    featureCode: "AIRP",
-    north: String(north),
-    south: String(south),
-    east: String(east),
-    west: String(west),
-    maxRows: String(maxRows),
-    style: "SHORT",
-  });
-  const url = `https://secure.geonames.org/searchJSON?${q.toString()}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("GeoNames airport search failed");
-  const json = await res.json();
-  return json.geonames || [];
-}
-
 /**
  * Fetch area, industries, climate from Wikidata by GeoNames ID
  */

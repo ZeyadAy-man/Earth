@@ -1,0 +1,57 @@
+/* Make sure the panel has a class, e.g., 'country-panel' */
+.country-panel {
+  overflow-y: auto;
+}
+
+/* Scrollbar styling */
+.country-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.country-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.country-panel::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 255, 0.15);
+  border-radius: 4px;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.country-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 255, 0.3);
+}
+
+/* Scrollbar for panel and selects */
+div::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+div::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.05);
+  border-radius: 4px;
+}
+
+div::-webkit-scrollbar-thumb {
+  background-color: rgba(0,255,255,0.3);
+  border-radius: 4px;
+  border: 2px solid rgba(0,0,0,0.2);
+}
+
+div::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0,255,255,0.5);
+}
+
+/* Firefox */
+div {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,255,255,0.3) rgba(255,255,255,0.05);
+}
+
+/* Dropdown options hover effect */
+select option:hover {
+  background-color: rgba(0,255,255,0.1);
+  color: #e5faff;
+}

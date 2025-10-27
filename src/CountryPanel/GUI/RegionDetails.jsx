@@ -31,7 +31,7 @@ export default function RegionDetails({
       setAttractionImage,
     });
   };
-
+  
   if(!country){
     setRegionImage(null);
   }
@@ -72,6 +72,7 @@ export default function RegionDetails({
                 className={styles.dropdown}
                 defaultValue=""
                 onChange={handleChange}
+                // style={styles.}
               >
                 <option value="" disabled>
                   — Select region —

@@ -35,7 +35,6 @@ export default function App() {
     try {
       const rev = await reverseGeocode(lat, lon);
       const countryCode = rev.address?.country_code?.toUpperCase();
-      console.log("Reverse geocode country code:", countryCode, rev);
       if (!countryCode) throw new Error("No country at that location");
 
       const countryData = await getCountryFromRestCountries(countryCode);
@@ -56,14 +55,6 @@ export default function App() {
       let regions = [];
       try {
         regions = await fetchRegionsGeoNames(countryCode, countryName);
-        console.log(
-          "Country Code: ",
-          countryCode,
-          "Country Name: ",
-          countryName,
-          "Regions:",
-          regions
-        );
       } catch (err) {
         console.warn("GeoNames regions failed, trying Wikidata", err);
         try {

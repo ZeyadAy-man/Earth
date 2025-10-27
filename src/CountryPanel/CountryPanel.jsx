@@ -9,7 +9,7 @@ import RegionDetails from "./GUI/RegionDetails";
 import CityDetails from "./GUI/CityDetails";
 import HotelDetails from "./GUI/HotelDetails";
 import AttractionDetails from "./GUI/AttractionDetails";
-
+import './styles.css'
 export default function CountryPanel({
   data,
   loading,
@@ -50,7 +50,6 @@ export default function CountryPanel({
   const attractionFetchControllerRef = useRef(null);
 
   if (!data) {
-    // setRegionImage(null)
     return <IdleGUI error={error} styles={styles} />;
   }
 
@@ -64,13 +63,14 @@ export default function CountryPanel({
     capitalImage,
   } = data;
   const country = countryData?.[0];
-
+  console.log(data)
   const hotels = HotelFilters({ places });
 
+  console.log(places)
   const attractions = AttractionFilters({ places });
 
   return (
-    <div style={styles.panel}>
+    <div style={styles.panel} className="country-panel">
       <CountryDetails
         geoData={geoData}
         country={country}

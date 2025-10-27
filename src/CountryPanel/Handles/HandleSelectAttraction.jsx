@@ -14,7 +14,7 @@ export default async function HandleSelectAttraction(
   setAttractionImage(null);
   setSelectedAttraction(attraction);
   setImageLoading(true);
-
+  console.log(attraction)
   try {
     if (attractionFetchControllerRef.current) {
       attractionFetchControllerRef.current.abort();

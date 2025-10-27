@@ -1,6 +1,7 @@
 import { styles } from "../Styles";
 
 export default function CityDetails({ cities, loading, onCitySelect }) {
+
   return (
     <div style={{ marginTop: 12 }}>
       <label style={{ fontWeight: 700 }}>🏘️ Cities</label>

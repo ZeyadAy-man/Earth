@@ -42,4 +42,5 @@ export const styles = {
     marginTop: 10,
     textShadow: "0 0 6px rgba(0,255,255,0.3)",
   },
+  
 };
