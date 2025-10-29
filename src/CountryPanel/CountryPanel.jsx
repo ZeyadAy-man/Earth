@@ -21,8 +21,7 @@ export default function CountryPanel({
   cityName,
   regionName,
 }) {
-
-  const [open, setOpen] = useState(true);   //  <-- NEW
+  const [open, setOpen] = useState(true); //  <-- NEW
 
   const {
     regionImage,
@@ -72,32 +71,23 @@ export default function CountryPanel({
 
   return (
     <>
-
       {/* ───── Toggle Button ───── */}
       <button
-        onClick={() => setOpen(o => !o)}
-        style={{
-          position: "absolute",
-          top: 20,
-          left: open ? 420 : 20,
-          zIndex: 1000,
-          background: "rgba(10,15,25,0.75)",
-          color: "#e5faff",
-          border: "1px solid rgba(0,255,255,0.2)",
-          borderRadius: 10,
-          padding: "6px 14px",
-          cursor: "pointer",
-          backdropFilter: "blur(14px)",
-          transition: "0.3s ease",
-        }}
+        onClick={() => setOpen((o) => !o)}
+        className={`panel-toggle-btn main-toggle ${open ? "shifted" : ""}`}
       >
         {open ? "Hide Panel" : "Show Panel"}
       </button>
 
-
       {/* ───── Panel ───── */}
       {open && (
         <div style={styles.panel} className="country-panel">
+          <button
+            onClick={() => setOpen(false)}
+            className="panel-toggle-btn inner-toggle"
+          >
+            Hide Panel
+          </button>
           <CountryDetails
             geoData={geoData}
             country={country}

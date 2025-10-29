@@ -56,3 +56,45 @@ select option:hover {
   background-color: rgba(0,255,255,0.1);
   color: #e5faff;
 }
+
+.panel-toggle-btn {
+  background: rgba(10, 15, 25, 0.75);
+  color: #e5faff;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 6px 14px;
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+  transition: 0.3s ease;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 15px;
+}
+
+/* Hover */
+.panel-toggle-btn:hover {
+  background: rgba(15, 25, 35, 0.9);
+  border-color: rgba(0, 255, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+/* زر الرئيسي خارج البانل */
+.main-toggle {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+/* لما البانل مفتوح نزيحه */
+.main-toggle.shifted {
+  left: 420px;
+}
+
+/* زر داخل البانل */
+.inner-toggle {
+  position: relative;
+  margin-bottom: 10px;
+  top: 0;
+  left: 0;
+}
