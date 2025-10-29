@@ -72,12 +72,14 @@ export default function CountryPanel({
   return (
     <>
       {/* ───── Toggle Button ───── */}
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className={`panel-toggle-btn main-toggle ${open ? "shifted" : ""}`}
-      >
-        {open ? "Hide Panel" : "Show Panel"}
-      </button>
+      {!open && (
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className={`panel-toggle-btn main-toggle ${open ? "shifted" : ""}`}
+        >
+          {open ? "Hide Panel" : "Show Panel"}
+        </button>
+      )}
 
       {/* ───── Panel ───── */}
       {open && (
