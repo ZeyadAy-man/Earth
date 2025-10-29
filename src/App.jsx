@@ -1,6 +1,7 @@
 import CountryPanel from "./CountryPanel/CountryPanel";
 import { useState } from "react";
 import CanvasScene from "./CanvasScene/CanvasScene";
+import LoadingPage from "./CountryPanel/Loading/Loading";
 import {
   reverseGeocode,
   getCountryFromRestCountries,
@@ -75,7 +76,6 @@ export default function App() {
         places: [],
       });
 
-      // reset previous selections
       setSelectedRegionName(null);
       setSelectedCityName(null);
     } catch (err) {
@@ -86,19 +86,17 @@ export default function App() {
     }
   }
 
-  // region selected -> load cities
   async function onRegionSelect(region) {
     setError(null);
     setLoading((s) => ({ ...s, cities: true }));
     setData((d) => ({ ...d, cities: [], places: [] }));
     setSelectedRegionName(region?.name || null);
-    setSelectedCityName(null); // reset city when region changes
+    setSelectedCityName(null);
 
     try {
       const countryCode = data?.countryData?.[0]?.cca2;
       const cities = await fetchCitiesGeoNames(region, countryCode);
 
-      // sort by name and dedupe
       const seen = new Set();
       const dedup = [];
       for (const c of cities || []) {
@@ -118,7 +116,6 @@ export default function App() {
     }
   }
 
-  // city selected -> load places
   async function onCitySelect(city) {
     setError(null);
     setLoading((s) => ({ ...s, places: true }));
@@ -156,6 +153,7 @@ export default function App() {
   return (
     <>
       <CanvasScene onCountryClick={onCountryClick} />
+      {loading.country || loading.cities || loading.places || loading.regions ? <LoadingPage/> : null}
       <CountryPanel
         data={data}
         loading={loading}

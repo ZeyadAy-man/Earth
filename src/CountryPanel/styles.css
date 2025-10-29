@@ -1,6 +1,7 @@
 /* Make sure the panel has a class, e.g., 'country-panel' */
 .country-panel {
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Scrollbar styling */

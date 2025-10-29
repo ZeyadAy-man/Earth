@@ -10,15 +10,7 @@ import {
   IoGlobe,
 } from "react-icons/io5";
 import styles from "./CountryDetails.module.css";
-/**
- * Props:
- * - geoData { lat, lon }
- * - country (REST Countries object)
- * - weatherData (optional)
- * - capitalImage (string or array)  // backwards compatible
- *
- * This component is backward-compatible with your existing usage.
- */
+
 export default function CountryDetails({
   geoData,
   country,
@@ -33,7 +25,6 @@ export default function CountryDetails({
     return [capitalImage];
   }, [capitalImage]);
 
-  // Auto-advance slideshow every 4s if more than 1 image
   useEffect(() => {
     if (capitalImages.length <= 1) return;
     const id = setInterval(() => {
@@ -42,7 +33,6 @@ export default function CountryDetails({
     return () => clearInterval(id);
   }, [capitalImages.length]);
 
-  // Copy coords
   const handleCopyCoords = async () => {
     if (!geoData) return;
     const text = `${geoData.lat.toFixed(6)}, ${geoData.lon.toFixed(6)}`;
@@ -51,11 +41,10 @@ export default function CountryDetails({
       setCopied(true);
       setTimeout(() => setCopied(false), 1400);
     } catch (err) {
-      // ignore
+      console.error(err)
     }
   };
 
-  // Format helpers
   const fmtNumber = (n) =>
     n == null ? "N/A" : typeof n === "number" ? n.toLocaleString() : n;
   const fmtArea = (a) =>
@@ -69,25 +58,21 @@ export default function CountryDetails({
           .join(", ")
       : "N/A";
 
-  // Local time attempt: parse "UTC+02:00" or use Intl if an IANA zone exists
   const localTime = useMemo(() => {
     if (!country) return null;
     const tzs = country.timezones || [];
     if (tzs.length === 0) return null;
 
-    const first = tzs[0]; // RESTCountries gives something like "UTC+02:00" often
-    // Try parse "UTC±HH:MM"
+    const first = tzs[0];
     const m = first.match(/^UTC([+-]\d{1,2})(?::?(\d{2}))?$/i);
     if (m) {
       const hours = parseInt(m[1], 10);
       const mins = parseInt(m[2] || "0", 10);
       const now = new Date();
-      // compute UTC milliseconds then add offset
       const utc = now.getTime() + now.getTimezoneOffset() * 60000;
       const offsetMs = (hours * 60 + (hours >= 0 ? mins : -mins)) * 60000;
       return new Date(utc + offsetMs);
     }
-    // Else try Intl with timezone string (if it's IANA)
     try {
       const dt = new Date();
       const fmt = new Intl.DateTimeFormat(undefined, {
@@ -97,14 +82,12 @@ export default function CountryDetails({
         second: "2-digit",
         hour12: false,
       });
-      // just format to string (we also return a Date object by creating one from formatted pieces is complicated)
       return fmt.format(dt);
     } catch (err) {
-      return null;
+      console.error(err)
     }
   }, [country]);
 
-  // Render skeleton if no country
   if (!country) {
     return (
       <div className={styles["cd-root"]}>
@@ -140,7 +123,6 @@ export default function CountryDetails({
         </div>
       </div>
 
-      {/* main info rows */}
       <div className={styles["cd-grid"]}>
         <div className={styles["cd-row"]}>
           <div className={styles["cd-row-label"]}>

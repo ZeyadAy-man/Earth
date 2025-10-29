@@ -18,7 +18,6 @@ export default async function HandleRegionSelect({
   setSelectedRegionName(region.name);
   onRegionSelect(region);
 
-  // fetch region image
   setRegionLoading(true);
   setRegionImage(null);
   setHotelImage(null);

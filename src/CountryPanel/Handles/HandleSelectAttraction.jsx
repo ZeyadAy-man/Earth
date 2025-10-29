@@ -38,7 +38,6 @@ export default async function HandleSelectAttraction(
       signal
     );
 
-    // Only apply the result if this controller is still the latest (i.e., user didn't click another attraction)
     if (attractionFetchControllerRef.current === controller) {
       setAttractionImage(image);
       setImageLoading(false);
@@ -50,7 +49,6 @@ export default async function HandleSelectAttraction(
       // aborted — ignore
     } else {
       console.error("Failed to fetch attraction image:", err);
-      // Only show error state if still current controller
       if (attractionFetchControllerRef.current === controller) {
         setAttractionImage(null);
         setImageLoading(false);

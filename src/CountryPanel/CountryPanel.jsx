@@ -9,7 +9,7 @@ import RegionDetails from "./GUI/RegionDetails";
 import CityDetails from "./GUI/CityDetails";
 import HotelDetails from "./GUI/HotelDetails";
 import AttractionDetails from "./GUI/AttractionDetails";
-import './styles.css'
+import "./styles.css";
 export default function CountryPanel({
   data,
   loading,
@@ -40,12 +40,12 @@ export default function CountryPanel({
   } = InitializerStates();
 
   useEffect(() => {
-    if(!data){
-      setRegionImage(null)
-      setHotelImage(null)
-      setAttractionImage(null)
+    if (!data) {
+      setRegionImage(null);
+      setHotelImage(null);
+      setAttractionImage(null);
     }
-  }, [data])
+  }, [data]);
 
   const attractionFetchControllerRef = useRef(null);
 
@@ -63,78 +63,77 @@ export default function CountryPanel({
     capitalImage,
   } = data;
   const country = countryData?.[0];
-  console.log(data)
   const hotels = HotelFilters({ places });
-
-  console.log(places)
   const attractions = AttractionFilters({ places });
 
   return (
-    <div style={styles.panel} className="country-panel">
-      <CountryDetails
-        geoData={geoData}
-        country={country}
-        weatherData={weatherData}
-        capitalImage={capitalImage}
-      />
-
-      <hr
-        style={{
-          border: "none",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-          margin: "12px 0",
-        }}
-      />
-
-      <RegionDetails
-        regions={regions}
-        loading={loading}
-        onRegionSelect={onRegionSelect}
-        country={country}
-        setSelectedRegionName={setSelectedRegionName}
-        setRegionLoading={setRegionLoading}
-        setRegionImage={setRegionImage}
-        setHotelImage={setHotelImage}
-        setAttractionImage={setAttractionImage}
-        regionLoading={regionLoading}
-        regionImage={regionImage}
-      />
-
-      <CityDetails
-        cities={cities}
-        loading={loading}
-        onCitySelect={onCitySelect}
-      />
-
-      {/* places */}
-      <div style={{ marginTop: 12 }}>
-        <label style={{ fontWeight: 700 }}>📍 Top places</label>
-
-        <HotelDetails
-          hotels={hotels}
-          cityName={cityName}
-          countryName={countryName}
-          hotelImage={hotelImage}
-          setHotelImage={setHotelImage}
-          hotelLoading={hotelLoading}
-          setHotelLoading={setHotelLoading}
+    <>
+      <div style={styles.panel} className="country-panel">
+        <CountryDetails
+          geoData={geoData}
+          country={country}
+          weatherData={weatherData}
+          capitalImage={capitalImage}
         />
 
-        <AttractionDetails
-          attractions={attractions}
-          regionName={regionName}
-          countryName={countryName}
-          attractionImage={attractionImage}
-          setAttractionImage={setAttractionImage}
-          selectedAttraction={selectedAttraction}
-          setSelectedAttraction={setSelectedAttraction}
-          imageLoading={imageLoading}
-          setImageLoading={setImageLoading}
+        <hr
+          style={{
+            border: "none",
+            borderTop: "1px solid rgba(255,255,255,0.06)",
+            margin: "12px 0",
+          }}
+        />
+
+        <RegionDetails
+          regions={regions}
           loading={loading}
-          attractionFetchControllerRef={attractionFetchControllerRef}
-          places={places}
+          onRegionSelect={onRegionSelect}
+          country={country}
+          setSelectedRegionName={setSelectedRegionName}
+          setRegionLoading={setRegionLoading}
+          setRegionImage={setRegionImage}
+          setHotelImage={setHotelImage}
+          setAttractionImage={setAttractionImage}
+          regionLoading={regionLoading}
+          regionImage={regionImage}
         />
+
+        <CityDetails
+          cities={cities}
+          loading={loading}
+          onCitySelect={onCitySelect}
+        />
+
+        {/* places */}
+        <div style={{ marginTop: 12 }}>
+          <label style={{ fontWeight: 700 }}>📍 Top places</label>
+
+          <HotelDetails
+            hotels={hotels}
+            cityName={cityName}
+            countryName={countryName}
+            hotelImage={hotelImage}
+            setHotelImage={setHotelImage}
+            hotelLoading={hotelLoading}
+            setHotelLoading={setHotelLoading}
+          />
+
+          <AttractionDetails
+            attractions={attractions}
+            regionName={regionName}
+            countryName={countryName}
+            attractionImage={attractionImage}
+            setAttractionImage={setAttractionImage}
+            selectedAttraction={selectedAttraction}
+            setSelectedAttraction={setSelectedAttraction}
+            imageLoading={imageLoading}
+            setImageLoading={setImageLoading}
+            loading={loading}
+            attractionFetchControllerRef={attractionFetchControllerRef}
+            places={places}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

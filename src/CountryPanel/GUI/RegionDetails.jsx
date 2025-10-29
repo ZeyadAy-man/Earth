@@ -72,7 +72,6 @@ export default function RegionDetails({
                 className={styles.dropdown}
                 defaultValue=""
                 onChange={handleChange}
-                // style={styles.}
               >
                 <option value="" disabled>
                   — Select region —

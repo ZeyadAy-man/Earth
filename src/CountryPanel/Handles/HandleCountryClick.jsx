@@ -62,7 +62,6 @@ export default async function onCountryClick(
       places: [],
     });
 
-    // reset previous selections
     setSelectedRegionName(null);
     setSelectedCityName(null);
   } catch (err) {

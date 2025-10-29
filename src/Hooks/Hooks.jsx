@@ -31,7 +31,6 @@ export async function getWeather(lat, lon) {
 export async function fetchCapitalImage(capitalName, countryName) {
   if (!capitalName) return null;
 
-  // Emphasize famous landmarks / tourist attractions in search
   const query = `${capitalName} ${countryName || ""} famous landmarks OR monuments OR attractions`;
 
   try {
@@ -54,7 +53,6 @@ export async function fetchCapitalImage(capitalName, countryName) {
 
     const json = await res.json();
     if (json.results && json.results.length > 0) {
-      // Prefer most relevant photo by popularity (likes + relevance)
       const best = json.results.sort((a, b) => b.likes - a.likes)[0];
       return best.urls?.regular || best.urls?.small || best.urls?.thumb || null;
     } else {
@@ -88,10 +86,6 @@ export async function fetchRegionsGeoNames(countryCode, countryName) {
   if(countryId == 1814991 && countryCode === "US" && countryName === "United States") {
     countryId = 6252001;
   }
-  if(countryId == 294640 &&countryCode === "IL"){
-    countryId = 6254930;
-  }
-  
   if (!countryId) return [];
 
   const childrenUrl = `https://secure.geonames.org/childrenJSON?geonameId=${countryId}&username=${GEO_NAMES_USERNAME}`;
@@ -198,7 +192,6 @@ export async function fetchAttractionImage(attractionName, regionName, countryNa
     });
 
     if (!res.ok) {
-      // If aborted, let caller handle; otherwise warn
       if (res.status === 403 || res.status === 401) {
         console.warn("Unsplash auth / rate limit issue:", res.status);
       }
@@ -211,7 +204,6 @@ export async function fetchAttractionImage(attractionName, regionName, countryNa
       console.log(data.results[0].urls.small || data.results[0].urls.regular || null)
       return data.results[0].urls.small || data.results[0].urls.regular || null;
     } else {
-      // fallback: query by attraction name only
       const fallbackUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(
         attractionName
       )}&per_page=1&orientation=landscape`;
@@ -225,7 +217,6 @@ export async function fetchAttractionImage(attractionName, regionName, countryNa
     }
   } catch (error) {
     if (error.name === "AbortError") {
-      // fetch was aborted — caller expects this possibility
       return null;
     }
     console.error("Error fetching attraction image:", error);
@@ -267,9 +258,7 @@ export async function fetchGeoNamesGet(geonameId) {
   if (!res.ok) throw new Error("GeoNames getJSON failed");
   return res.json();
 }
-/**
- * Fetch area, industries, climate from Wikidata by GeoNames ID
- */
+
 export async function fetchWikidataByGeonameId(geonameId) {
   if (!geonameId) return null;
 
@@ -318,12 +307,10 @@ export async function enrichRegion(region) {
   const out = { ...region, population: null, area_km2: null, main_economic_activities: [], climate: null, airports: [] };
 
   try {
-    // 1) Population from GeoNames
     const gn = await fetchGeoNamesGet(geonameId);
     if (gn && gn.population) out.population = Number(gn.population);
 
-    // 2) Wikidata enrichment
-    const wd = await fetchWikidataByGeonameId(geonameId); // دالة جديدة SPARQL
+    const wd = await fetchWikidataByGeonameId(geonameId);
     if (wd) {
       if (wd.area_km2) out.area_km2 = wd.area_km2;
       if (wd.main_economic_activities?.length) out.main_economic_activities = wd.main_economic_activities;
@@ -347,7 +334,7 @@ export async function enrichRegionsBatch(regions, batchSize = 6, delayMs = 200) 
     const batch = regions.slice(i, i + batchSize);
     const enriched = await Promise.all(batch.map(r => enrichRegion(r)));
     results.push(...enriched);
-    await new Promise(res => setTimeout(res, delayMs)); // rate limit friendly
+    await new Promise(res => setTimeout(res, delayMs));
   }
   return results;
 }
